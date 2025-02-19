@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autodeploy-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: autodeploy-app
+  template:
+    metadata:
+      labels:
+        app: autodeploy-app
+    spec:
+      containers:
+        - name: autodeploy-app
+          image: vaishnavipawar09/autodeploy-app:latest
+          ports:
+            - containerPort: 3000
