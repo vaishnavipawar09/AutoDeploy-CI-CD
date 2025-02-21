@@ -54,3 +54,21 @@ app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
 
+// Sample tasks data
+let tasks = [
+    { id: 1, title: 'Learn Node.js', completed: false },
+    { id: 2, title: 'Deploy app to Kubernetes', completed: true }
+];
+
+// GET /tasks → Fetch all tasks
+app.get('/tasks', (req, res) => {
+    res.json(tasks);
+});
+
+// POST /tasks → Add a new task
+app.post('/tasks', (req, res) => {
+    const newTask = { id: tasks.length + 1, ...req.body };
+    tasks.push(newTask);
+    res.status(201).json(newTask);
+});
+
