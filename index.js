@@ -8,6 +8,20 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json()); // Allows us to handle JSON requests
 
+const mongoose = require('mongoose');
+
+mongoose.connect('mongodb+srv://vaishnavipawar09:Igotthejob@deploycluster.2ssx0.mongodb.net/?retryWrites=true&w=majority&appName=DeployCluster')
+  .then(() => console.log('Connected to MongoDB 🚀'))
+  .catch(err => console.error('Error connecting to MongoDB:', err));
+  
+// Define User Schema
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    role: { type: String, required: true }
+});
+
+// Create Model
+const User = mongoose.model('User', userSchema);
 // Sample Data 
 let users = [
     { id: 1, name: 'Vaishnavi Pawar', role: 'Developer' },
@@ -16,14 +30,15 @@ let users = [
 
 
 // Get All Users
-app.get('/users', (req, res) => {
-    const role = req.query.role; // Gets the "role" from query params
-    if (role) {
-        const filteredUsers = users.filter(u => u.role === role);
-        return res.json(filteredUsers);
+app.get('/users', async (req, res) => {
+    try {
+        const users = await User.find(); // Fetches all users from MongoDB
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
-    res.json(users);
 });
+
 
 // Get a Single User by ID
 app.get('/users/:id', (req, res) => {
@@ -33,18 +48,23 @@ app.get('/users/:id', (req, res) => {
 });
 
 // Create a New User
-app.post('/users', (req, res) => {
+app.post('/users', async (req, res) => {
     const { name, role } = req.body;
-
-    // Simple validation
+    
     if (!name || !role) {
         return res.status(400).json({ message: 'Name and role are required!' });
     }
 
-    const newUser = { id: users.length + 1, ...req.body };
-    users.push(newUser);
-    res.status(201).json(newUser);
+    const newUser = new User({ name, role });
+
+    try {
+        const savedUser = await newUser.save(); // Saves user in MongoDB
+        res.status(201).json(savedUser);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
+
 
 // Update an Existing User
 app.put('/users/:id', (req, res) => {
@@ -84,9 +104,3 @@ app.post('/tasks', (req, res) => {
     res.status(201).json(newTask);
 });
 
-const mongoose = require('mongoose');
-
-mongoose.connect('mongodb+srv://vaishnavipawar09:Igotthejob@deploycluster.2ssx0.mongodb.net/?retryWrites=true&w=majority&appName=DeployCluster')
-  .then(() => console.log('Connected to MongoDB 🚀'))
-  .catch(err => console.error('Error connecting to MongoDB:', err));
-  
