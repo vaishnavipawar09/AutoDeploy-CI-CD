@@ -17,6 +17,11 @@ let users = [
 
 // Get All Users
 app.get('/users', (req, res) => {
+    const role = req.query.role; // Gets the "role" from query params
+    if (role) {
+        const filteredUsers = users.filter(u => u.role === role);
+        return res.json(filteredUsers);
+    }
     res.json(users);
 });
 
