@@ -34,6 +34,13 @@ app.get('/users/:id', (req, res) => {
 
 // Create a New User
 app.post('/users', (req, res) => {
+    const { name, role } = req.body;
+
+    // Simple validation
+    if (!name || !role) {
+        return res.status(400).json({ message: 'Name and role are required!' });
+    }
+    
     const newUser = { id: users.length + 1, ...req.body };
     users.push(newUser);
     res.status(201).json(newUser);
