@@ -28,7 +28,6 @@ let users = [
     { id: 2, name: 'Rashmi Bari', role: 'Designer' }
 ];
 
-
 // Get All Users
 app.get('/users', async (req, res) => {
     try {
@@ -64,7 +63,6 @@ app.post('/users', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
-
 
 // Update an Existing User
 app.put('/users/:id', (req, res) => {
