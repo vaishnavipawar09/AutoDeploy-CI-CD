@@ -86,6 +86,7 @@ app.post('/tasks', (req, res) => {
 
 const mongoose = require('mongoose');
 
-mongoose.connect('mongodb+srv://vaishnavipawar09:<Igotthejob>@deploycluster.2ssx0.mongodb.net/?retryWrites=true&w=majority&appName=DeployCluster')
+mongoose.connect('mongodb+srv://vaishnavipawar09:Igotthejob@deploycluster.2ssx0.mongodb.net/?retryWrites=true&w=majority&appName=DeployCluster')
   .then(() => console.log('Connected to MongoDB 🚀'))
   .catch(err => console.error('Error connecting to MongoDB:', err));
+  
