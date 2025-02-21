@@ -11,7 +11,7 @@ app.use(express.json()); // Allows us to handle JSON requests
 // Sample Data 
 let users = [
     { id: 1, name: 'Vaishnavi Pawar', role: 'Developer' },
-    { id: 2, name: 'Rashmi', role: 'Designer' }
+    { id: 2, name: 'Rashmi Bari', role: 'Designer' }
 ];
 
 
@@ -40,7 +40,7 @@ app.post('/users', (req, res) => {
     if (!name || !role) {
         return res.status(400).json({ message: 'Name and role are required!' });
     }
-    
+
     const newUser = { id: users.length + 1, ...req.body };
     users.push(newUser);
     res.status(201).json(newUser);
