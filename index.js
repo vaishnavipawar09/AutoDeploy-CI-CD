@@ -90,10 +90,20 @@ app.put('/users/:id', async (req, res) => {
 
 
 // Delete a User
-app.delete('/users/:id', (req, res) => {
-    users = users.filter(u => u.id !== parseInt(req.params.id));
-    res.json({ message: 'User deleted' });
+app.delete('/users/:id', async (req, res) => {
+    try {
+        const deletedUser = await User.findByIdAndDelete(req.params.id);
+        
+        if (!deletedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({ message: 'User deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
+
 
 // Server Listening
 app.listen(PORT, () => {
