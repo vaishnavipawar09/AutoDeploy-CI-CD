@@ -68,21 +68,26 @@ app.post('/users', async (req, res) => {
 app.put('/users/:id', async (req, res) => {
     try {
         const { name, role } = req.body;
-        const updatedUser = await User.findByIdAndUpdate(
-            req.params.id, 
-            { name, role }, 
-            { new: true, runValidators: true } // Returns updated user
-        );
 
-        if (!updatedUser) {
-            return res.status(404).json({ message: 'User not found' });
+        // Check if user exists before updating
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found. Check the ID and try again.' });
         }
+
+        // Update user
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            { name, role },
+            { new: true, runValidators: true }
+        );
 
         res.json(updatedUser);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
+
 
 // Delete a User
 app.delete('/users/:id', (req, res) => {
