@@ -65,12 +65,23 @@ app.post('/users', async (req, res) => {
 });
 
 // Update an Existing User
-app.put('/users/:id', (req, res) => {
-    const user = users.find(u => u.id === parseInt(req.params.id));
-    if (!user) return res.status(404).json({ message: 'User not found' });
+app.put('/users/:id', async (req, res) => {
+    try {
+        const { name, role } = req.body;
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id, 
+            { name, role }, 
+            { new: true, runValidators: true } // Returns updated user
+        );
 
-    Object.assign(user, req.body);
-    res.json(user);
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json(updatedUser);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
 // Delete a User
