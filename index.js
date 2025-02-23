@@ -1,53 +1,126 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 const app = express();
 const PORT = 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json()); // Allows us to handle JSON requests
+app.use(express.json()); // Allows JSON requests
 
-const mongoose = require('mongoose');
-
+// Connect to MongoDB Atlas
 mongoose.connect('mongodb+srv://vaishnavipawar09:Igotthejob@deploycluster.2ssx0.mongodb.net/?retryWrites=true&w=majority&appName=DeployCluster')
   .then(() => console.log('Connected to MongoDB 🚀'))
   .catch(err => console.error('Error connecting to MongoDB:', err));
-  
+
 // Define User Schema
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
     role: { type: String, required: true }
 });
 
-// Create Model
-const User = mongoose.model('User', userSchema);
-// Sample Data 
-let users = [
-    { id: 1, name: 'Vaishnavi Pawar', role: 'Developer' },
-    { id: 2, name: 'Rashmi Bari', role: 'Designer' }
-];
+// Hash password before saving
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) return next();
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
+});
 
-// Get All Users
-app.get('/users', async (req, res) => {
+// Compare password for login
+userSchema.methods.comparePassword = function (password) {
+    return bcrypt.compare(password, this.password);
+};
+
+// Create User Model
+const User = mongoose.model('User', userSchema);
+
+// JWT Middleware
+const authMiddleware = (req, res, next) => {
+    const token = req.header('Authorization');
+    if (!token) return res.status(401).json({ message: 'Access denied. No token provided.' });
+
     try {
-        const users = await User.find(); // Fetches all users from MongoDB
+        const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        res.status(400).json({ message: 'Invalid token' });
+    }
+};
+
+// User Signup
+app.post('/auth/signup', async (req, res) => {
+    try {
+        const { name, email, password, role } = req.body;
+
+        // Check if user already exists
+        let user = await User.findOne({ email });
+        if (user) return res.status(400).json({ message: 'User already exists' });
+
+        // Create new user
+        user = new User({ name, email, password, role });
+        await user.save();
+
+        // Generate JWT token
+        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        res.status(201).json({ token });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// User Login
+app.post('/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Find user by email
+        const user = await User.findOne({ email });
+        if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+
+        // Check password
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+
+        // Generate JWT token
+        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        res.json({ token });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Get All Users (Protected Route)
+app.get('/users', authMiddleware, async (req, res) => {
+    try {
+        const users = await User.find();
         res.json(users);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
-
 // Get a Single User by ID
-app.get('/users/:id', (req, res) => {
-    const user = users.find(u => u.id === parseInt(req.params.id));
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json(user);
+app.get('/users/:id', authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
-// Create a New User
-app.post('/users', async (req, res) => {
+// Create a New User (Protected)
+app.post('/users', authMiddleware, async (req, res) => {
     const { name, role } = req.body;
     
     if (!name || !role) {
@@ -64,8 +137,8 @@ app.post('/users', async (req, res) => {
     }
 });
 
-// Update an Existing User
-app.put('/users/:id', async (req, res) => {
+// Update an Existing User (Protected)
+app.put('/users/:id', authMiddleware, async (req, res) => {
     try {
         const { name, role } = req.body;
 
@@ -88,9 +161,8 @@ app.put('/users/:id', async (req, res) => {
     }
 });
 
-
-// Delete a User
-app.delete('/users/:id', async (req, res) => {
+// Delete a User (Protected)
+app.delete('/users/:id', authMiddleware, async (req, res) => {
     try {
         const deletedUser = await User.findByIdAndDelete(req.params.id);
         
@@ -103,7 +175,6 @@ app.delete('/users/:id', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
-
 
 // Server Listening
 app.listen(PORT, () => {
