@@ -189,7 +189,7 @@ let tasks = [
     { id: 2, title: 'Deploy app to Kubernetes', completed: true }
 ];
 
-// GET /tasks → Fetch all tasks
+// GET /tasks
 app.get('/tasks', (req, res) => {
     res.json(tasks);
 });
