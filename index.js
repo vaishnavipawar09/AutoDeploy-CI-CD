@@ -16,7 +16,7 @@ app.use(express.json()); // Allows JSON requests
 
 // Connect to MongoDB Atlas
 mongoose.connect('mongodb+srv://vaishnavipawar09:Igotthejob@deploycluster.2ssx0.mongodb.net/?retryWrites=true&w=majority&appName=DeployCluster')
-  .then(() => console.log('Connected to MongoDB 🚀'))
+  .then(() => console.log('Connected to MongoDB! 🚀'))
   .catch(err => console.error('Error connecting to MongoDB:', err));
 
 // Define User Schema
