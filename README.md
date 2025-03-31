@@ -1,3 +1,3 @@
 # AutoDeploy-CI-CD
 
-Ongoing project. Learning new technologies
+Ongoing project. Learning new technologies.
